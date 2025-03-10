@@ -29,7 +29,6 @@ services:
     networks:
       - app-network
 
-  # Database service (MariaDB)
   mariadb:
     image: mariadb:latest
     container_name: mariadb_server
