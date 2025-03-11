@@ -188,11 +188,11 @@ export class LoginComponent implements OnInit {
         this.isLoading = false;
 
         // Navigate to appropriate dashboard based on user role
-        if (user.roles.includes('ROLE_COACH')) {
+        if (user.role === 'ROLE_COACH') {
           this.router.navigate(['/coach/dashboard']);
-        } else if (user.roles.includes('ROLE_SPORTIF')) {
+        } else if (user.role === 'ROLE_SPORTIF') {
           this.router.navigate(['/sportif/dashboard']);
-        } else if (user.roles.includes('ROLE_RESPONSABLE')) {
+        } else if (user.role === 'ROLE_RESPONSABLE') {
           this.router.navigate(['/responsable/coachs']);
         } else {
           this.router.navigate([this.returnUrl]);

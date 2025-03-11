@@ -13,14 +13,13 @@ export interface Seance {
   typeSeance: TypeSeance;
   themeSeance: ThemeSeance;
   coach: Coach;
-  sportifs: Sportif[];
+  sportifs: Sportif[]; // max 3 sportifs
   exercices: Exercice[];
   statut: StatutSeance;
   niveauSeance: NiveauSeance;
 }
 
-export interface SeanceCreation
-  extends Omit<Seance, 'id' | 'coach' | 'sportifs'> {
+export interface SeanceCreation extends Omit<Seance, 'id' | 'coach' | 'sportifs'> {
   coachId: string;
   sportifIds: string[];
 }

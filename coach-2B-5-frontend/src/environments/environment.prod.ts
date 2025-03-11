@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: '/api', // This will use the relative path in production
+  apiUrl: 'http://localhost:8000/api' // À remplacer par l'URL de production
 };
 

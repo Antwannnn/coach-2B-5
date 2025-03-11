@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  id: string | number; // UUID ou number pour la compatibilité
   nom: string;
   prenom: string;
   email: string;

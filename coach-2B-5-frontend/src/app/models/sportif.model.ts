@@ -6,7 +6,9 @@ export type NiveauSportif = 'débutant' | 'intermédiaire' | 'avancé';
 export interface Sportif extends User {
   dateInscription: string; // ISO date string
   niveauSportif: NiveauSportif;
-  seances?: Seance[];
+  seances?: Seance[]; // Relation avec les séances
+  telephone?: string; // Propriété optionnelle pour le téléphone
+  objectifs?: string; // Propriété optionnelle pour les objectifs
 }
 
 export interface SportifRegistration extends Omit<Sportif, 'id' | 'seances'> {

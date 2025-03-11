@@ -98,12 +98,12 @@ import { Coach } from '../../models/coach.model';
                         <div
                           class="flex-shrink-0 h-10 w-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold"
                         >
-                          {{ coach.firstName.charAt(0)
-                          }}{{ coach.lastName.charAt(0) }}
+                          {{ (coach.firstName || coach.prenom || '').charAt(0)
+                          }}{{ (coach.lastName || coach.nom || '').charAt(0) }}
                         </div>
                         <div class="ml-4">
                           <div class="text-sm font-medium text-teal-600">
-                            {{ coach.firstName }} {{ coach.lastName }}
+                            {{ coach.firstName || coach.prenom }} {{ coach.lastName || coach.nom }}
                           </div>
                           <div class="text-sm text-gray-500">
                             {{ coach.email }}
@@ -141,7 +141,7 @@ import { Coach } from '../../models/coach.model';
                               d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                             />
                           </svg>
-                          {{ coach.speciality }}
+                          {{ coach.speciality || (coach.specialites && coach.specialites.length > 0 ? coach.specialites[0] : 'Non spécifié') }}
                         </div>
                         <div
                           class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6"
@@ -159,7 +159,7 @@ import { Coach } from '../../models/coach.model';
                               d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                             />
                           </svg>
-                          {{ coach.sportifs.length }} sportifs
+                          {{ coach.sportifs?.length || 0 }} sportifs
                         </div>
                       </div>
                       <div
@@ -220,37 +220,49 @@ import { Coach } from '../../models/coach.model';
 export class ResponsableCoachsComponent implements OnInit {
   coaches: Coach[] = [
     {
-      id: 1,
-      firstName: 'Jean',
-      lastName: 'Dupont',
+      id: '1',
+      nom: 'Dupont',
+      prenom: 'Jean',
       email: 'jean.dupont@coachapp.com',
-      speciality: 'Musculation',
+      role: 'ROLE_COACH',
+      specialites: ['Musculation'],
+      tarifHoraire: 45,
       description: 'Coach spécialisé en musculation et remise en forme',
       createdAt: '2023-01-15',
-      sportifs: [1, 2, 3, 4],
-      hourlyRate: 45,
+      sportifs: [],
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      speciality: 'Musculation',
     },
     {
-      id: 2,
-      firstName: 'Marie',
-      lastName: 'Laurent',
+      id: '2',
+      nom: 'Laurent',
+      prenom: 'Marie',
       email: 'marie.laurent@coachapp.com',
-      speciality: 'Yoga',
+      role: 'ROLE_COACH',
+      specialites: ['Yoga'],
+      tarifHoraire: 40,
       description: 'Coach de yoga et méditation',
       createdAt: '2023-02-20',
-      sportifs: [5, 6],
-      hourlyRate: 40,
+      sportifs: [],
+      firstName: 'Marie',
+      lastName: 'Laurent',
+      speciality: 'Yoga',
     },
     {
-      id: 3,
-      firstName: 'Thomas',
-      lastName: 'Martin',
+      id: '3',
+      nom: 'Martin',
+      prenom: 'Thomas',
       email: 'thomas.martin@coachapp.com',
-      speciality: 'Cardio',
+      role: 'ROLE_COACH',
+      specialites: ['Cardio'],
+      tarifHoraire: 42,
       description: 'Spécialiste en entraînement cardio-vasculaire',
       createdAt: '2023-03-10',
-      sportifs: [7, 8, 9],
-      hourlyRate: 42,
+      sportifs: [],
+      firstName: 'Thomas',
+      lastName: 'Martin',
+      speciality: 'Cardio',
     },
   ];
 
@@ -258,7 +270,9 @@ export class ResponsableCoachsComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  formatDate(dateString: string): string {
+  formatDate(dateString: string | undefined): string {
+    if (!dateString) return 'Date inconnue';
+    
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'long',

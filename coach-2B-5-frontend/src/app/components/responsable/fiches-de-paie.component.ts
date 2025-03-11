@@ -241,10 +241,10 @@ import { Coach } from '../../models/coach.model';
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="text-sm text-gray-900">
-                            {{ fiche.amount.toFixed(2) }} €
+                            {{ fiche.amount ? fiche.amount.toFixed(2) : fiche.montantTotal?.toFixed(2) }} €
                           </div>
                           <div class="text-sm text-gray-500">
-                            {{ fiche.hoursWorked }} heures
+                            {{ fiche.hoursWorked || fiche.totalHeures || 0 }} heures
                           </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -325,90 +325,130 @@ import { Coach } from '../../models/coach.model';
 export class ResponsableFichesDePaieComponent implements OnInit {
   coaches: Coach[] = [
     {
-      id: 1,
-      firstName: 'Jean',
-      lastName: 'Dupont',
+      id: '1',
+      nom: 'Dupont',
+      prenom: 'Jean',
       email: 'jean.dupont@coachapp.com',
-      speciality: 'Musculation',
+      role: 'ROLE_COACH',
+      specialites: ['Musculation'],
+      tarifHoraire: 45,
       description: 'Coach spécialisé en musculation et remise en forme',
       createdAt: '2023-01-15',
-      sportifs: [1, 2, 3, 4],
-      hourlyRate: 45,
+      sportifs: [],
+      // Propriétés pour la compatibilité
+      firstName: 'Jean',
+      lastName: 'Dupont',
+      speciality: 'Musculation',
     },
     {
-      id: 2,
-      firstName: 'Marie',
-      lastName: 'Laurent',
+      id: '2',
+      nom: 'Laurent',
+      prenom: 'Marie',
       email: 'marie.laurent@coachapp.com',
-      speciality: 'Yoga',
+      role: 'ROLE_COACH',
+      specialites: ['Yoga'],
+      tarifHoraire: 40,
       description: 'Coach de yoga et méditation',
       createdAt: '2023-02-20',
-      sportifs: [5, 6],
-      hourlyRate: 40,
+      sportifs: [],
+      // Propriétés pour la compatibilité
+      firstName: 'Marie',
+      lastName: 'Laurent',
+      speciality: 'Yoga',
     },
     {
-      id: 3,
-      firstName: 'Thomas',
-      lastName: 'Martin',
+      id: '3',
+      nom: 'Martin',
+      prenom: 'Thomas',
       email: 'thomas.martin@coachapp.com',
-      speciality: 'Cardio',
+      role: 'ROLE_COACH',
+      specialites: ['Cardio'],
+      tarifHoraire: 42,
       description: 'Spécialiste en entraînement cardio-vasculaire',
       createdAt: '2023-03-10',
-      sportifs: [7, 8, 9],
-      hourlyRate: 42,
+      sportifs: [],
+      // Propriétés pour la compatibilité
+      firstName: 'Thomas',
+      lastName: 'Martin',
+      speciality: 'Cardio',
     },
   ];
 
   fichesDePaie: FicheDePaie[] = [
     {
-      id: 1,
-      coachId: 1,
-      month: 3,
-      year: 2023,
+      id: '1',
+      coachId: '1',
+      month: '3',
+      year: '2023',
       amount: 1350,
       hoursWorked: 30,
       status: 'paid',
       createdAt: '2023-03-31',
+      // Propriétés pour la compatibilité avec le nouveau modèle
+      coach: this.coaches[0],
+      periode: '03/2023',
+      totalHeures: 30,
+      montantTotal: 1350
     },
     {
-      id: 2,
-      coachId: 2,
-      month: 3,
-      year: 2023,
-      amount: 800,
-      hoursWorked: 20,
+      id: '2',
+      coachId: '2',
+      month: '3',
+      year: '2023',
+      amount: 1200,
+      hoursWorked: 30,
       status: 'paid',
       createdAt: '2023-03-31',
+      // Propriétés pour la compatibilité avec le nouveau modèle
+      coach: this.coaches[1],
+      periode: '03/2023',
+      totalHeures: 30,
+      montantTotal: 1200
     },
     {
-      id: 3,
-      coachId: 3,
-      month: 3,
-      year: 2023,
-      amount: 1050,
-      hoursWorked: 25,
+      id: '3',
+      coachId: '3',
+      month: '3',
+      year: '2023',
+      amount: 1260,
+      hoursWorked: 30,
       status: 'paid',
       createdAt: '2023-03-31',
+      // Propriétés pour la compatibilité avec le nouveau modèle
+      coach: this.coaches[2],
+      periode: '03/2023',
+      totalHeures: 30,
+      montantTotal: 1260
     },
     {
-      id: 4,
-      coachId: 1,
-      month: 4,
-      year: 2023,
-      amount: 1575,
-      hoursWorked: 35,
+      id: '4',
+      coachId: '1',
+      month: '4',
+      year: '2023',
+      amount: 1350,
+      hoursWorked: 30,
       status: 'pending',
       createdAt: '2023-04-30',
+      // Propriétés pour la compatibilité avec le nouveau modèle
+      coach: this.coaches[0],
+      periode: '04/2023',
+      totalHeures: 30,
+      montantTotal: 1350
     },
     {
-      id: 5,
-      coachId: 2,
-      month: 4,
-      year: 2023,
-      amount: 920,
-      hoursWorked: 23,
+      id: '5',
+      coachId: '2',
+      month: '4',
+      year: '2023',
+      amount: 1200,
+      hoursWorked: 30,
       status: 'pending',
       createdAt: '2023-04-30',
+      // Propriétés pour la compatibilité avec le nouveau modèle
+      coach: this.coaches[1],
+      periode: '04/2023',
+      totalHeures: 30,
+      montantTotal: 1200
     },
   ];
 
@@ -416,29 +456,42 @@ export class ResponsableFichesDePaieComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  getCoachName(coachId: number): string {
-    const coach = this.coaches.find((c) => c.id === coachId);
-    return coach ? `${coach.firstName} ${coach.lastName}` : 'Coach inconnu';
+  getCoachName(coachId: string | number | undefined): string {
+    if (coachId === undefined) return 'Coach inconnu';
+    const coach = this.coaches.find((c) => c.id == coachId);
+    return coach ? `${coach.firstName || coach.prenom} ${coach.lastName || coach.nom}` : 'Coach inconnu';
   }
 
-  getCoachEmail(coachId: number): string {
-    const coach = this.coaches.find((c) => c.id === coachId);
+  getCoachEmail(coachId: string | number | undefined): string {
+    if (coachId === undefined) return '';
+    const coach = this.coaches.find((c) => c.id == coachId);
     return coach ? coach.email : '';
   }
 
-  getCoachInitials(coachId: number): string {
-    const coach = this.coaches.find((c) => c.id === coachId);
-    return coach
-      ? `${coach.firstName.charAt(0)}${coach.lastName.charAt(0)}`
-      : '??';
+  getCoachInitials(coachId: string | number | undefined): string {
+    if (coachId === undefined) return '??';
+    const coach = this.coaches.find((c) => c.id == coachId);
+    if (!coach) return '??';
+    
+    const firstInitial = (coach.firstName || coach.prenom || '').charAt(0);
+    const lastInitial = (coach.lastName || coach.nom || '').charAt(0);
+    return `${firstInitial}${lastInitial}`;
   }
 
-  formatPeriod(month: number, year: number): string {
-    const date = new Date(year, month - 1);
+  formatPeriod(month: string | number | undefined, year: string | number | undefined): string {
+    if (month === undefined || year === undefined) return 'Période inconnue';
+    
+    // Convertir en nombres si nécessaire
+    const monthNum = typeof month === 'string' ? parseInt(month, 10) : month;
+    const yearNum = typeof year === 'string' ? parseInt(year, 10) : year;
+    
+    const date = new Date(yearNum, monthNum - 1);
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
   }
 
-  getStatusLabel(status: string): string {
+  getStatusLabel(status: string | undefined): string {
+    if (!status) return 'Statut inconnu';
+    
     switch (status) {
       case 'paid':
         return 'Payée';

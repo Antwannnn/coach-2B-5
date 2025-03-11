@@ -612,7 +612,7 @@ export class SportifDashboardComponent implements OnInit {
       id: '3',
       dateHeure: '2023-04-10T11:00:00',
       typeSeance: 'solo',
-      themeSeance: 'musculation',
+      themeSeance: 'muscu',
       coach: {
         id: '1',
         nom: 'Dupont',

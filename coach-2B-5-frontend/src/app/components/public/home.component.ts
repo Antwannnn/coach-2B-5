@@ -381,7 +381,7 @@ import { NavbarComponent } from '../shared/navbar.component';
                       href="mailto:contact@coachapp.com"
                       class="text-base text-gray-300 hover:text-white"
                     >
-                      contact@coachapp.com
+                      contact&#64;coachapp.com
                     </a>
                   </li>
                   <li>
