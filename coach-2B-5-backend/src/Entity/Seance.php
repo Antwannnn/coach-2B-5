@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SeanceRepository::class)]
 class Seance
@@ -16,31 +17,40 @@ class Seance
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read', 'exercice:read'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?\DateTimeInterface $dateHeure = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?string $typeSeance = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?string $themeSeance = null;
 
     #[ORM\ManyToOne(inversedBy: 'seances')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['seance:read', 'sportif:read'])]
     private ?Coach $coach = null;
 
     #[ORM\ManyToMany(targetEntity: Sportif::class, inversedBy: 'seances')]
+    #[Groups(['seance:read', 'coach:read'])]
     private Collection $sportifs;
 
     #[ORM\ManyToMany(targetEntity: Exercice::class, inversedBy: 'seances')]
+    #[Groups(['seance:read'])]
     private Collection $exercices;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?string $statut = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?string $niveauSeance = null;
 
     public function __construct()

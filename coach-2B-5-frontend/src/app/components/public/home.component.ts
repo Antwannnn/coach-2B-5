@@ -6,9 +6,8 @@ import { NavbarComponent } from '../shared/navbar.component';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, NavbarComponent],
+  imports: [CommonModule, RouterLink],
   template: `
-    <app-navbar></app-navbar>
 
     <!-- Hero Section -->
     <div

@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { NavbarComponent } from '../shared/navbar.component';
+import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule,    ],
   template: `
-    <app-navbar></app-navbar>
 
     <div class="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -197,6 +197,28 @@ import { NavbarComponent } from '../shared/navbar.component';
 
             <div>
               <label
+                for="role"
+                class="block text-sm font-medium text-gray-700"
+              >
+                Type de compte
+              </label>
+              <div class="mt-1">
+                <select
+                  id="role"
+                  name="role"
+                  formControlName="role"
+                  required
+                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                >
+                  <option value="ROLE_SPORTIF">Sportif</option>
+                  <option value="ROLE_COACH">Coach</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Champs spécifiques pour les sportifs -->
+            <div *ngIf="registerForm.get('role')?.value === 'ROLE_SPORTIF'">
+              <label
                 for="niveauSportif"
                 class="block text-sm font-medium text-gray-700"
               >
@@ -207,23 +229,49 @@ import { NavbarComponent } from '../shared/navbar.component';
                   id="niveauSportif"
                   name="niveauSportif"
                   formControlName="niveauSportif"
-                  required
                   class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                 >
-                  <option value="">Sélectionnez votre niveau</option>
                   <option value="débutant">Débutant</option>
                   <option value="intermédiaire">Intermédiaire</option>
                   <option value="avancé">Avancé</option>
                 </select>
               </div>
-              <div
-                *ngIf="
-                  registerForm.get('niveauSportif')?.invalid &&
-                  registerForm.get('niveauSportif')?.touched
-                "
-                class="mt-1 text-sm text-red-600"
+            </div>
+
+            <!-- Champs spécifiques pour les coachs -->
+            <div *ngIf="registerForm.get('role')?.value === 'ROLE_COACH'">
+              <label
+                for="specialites"
+                class="block text-sm font-medium text-gray-700"
               >
-                Le niveau sportif est requis
+                Spécialités (séparées par des virgules)
+              </label>
+              <div class="mt-1">
+                <input
+                  id="specialites"
+                  name="specialites"
+                  type="text"
+                  placeholder="Ex: cardio, musculation, yoga"
+                  (change)="updateSpecialites($event)"
+                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
+              </div>
+              
+              <label
+                for="tarifHoraire"
+                class="block text-sm font-medium text-gray-700 mt-4"
+              >
+                Tarif horaire (€)
+              </label>
+              <div class="mt-1">
+                <input
+                  id="tarifHoraire"
+                  name="tarifHoraire"
+                  type="number"
+                  min="0"
+                  formControlName="tarifHoraire"
+                  class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                />
               </div>
             </div>
 
@@ -257,12 +305,22 @@ import { NavbarComponent } from '../shared/navbar.component';
               Vous devez accepter les conditions d'utilisation
             </div>
 
+            <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+              <span class="block sm:inline">{{ errorMessage }}</span>
+            </div>
+
             <div>
               <button
                 type="submit"
-                [disabled]="registerForm.invalid"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                [disabled]="registerForm.invalid || isLoading"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
               >
+                <span *ngIf="isLoading" class="mr-2">
+                  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
                 S'inscrire
               </button>
             </div>
@@ -330,23 +388,37 @@ import { NavbarComponent } from '../shared/navbar.component';
 })
 export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
-
-  constructor(private fb: FormBuilder) {
-    this.registerForm = this.fb.group(
-      {
-        nom: ['', Validators.required],
-        prenom: ['', Validators.required],
-        email: ['', [Validators.required, Validators.email]],
-        password: ['', [Validators.required, Validators.minLength(6)]],
-        confirmPassword: ['', Validators.required],
-        niveauSportif: ['', Validators.required],
-        terms: [false, Validators.requiredTrue],
-      },
-      { validators: this.passwordMatchValidator }
-    );
+  isLoading = false;
+  errorMessage = '';
+  
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.registerForm = this.fb.group({
+      nom: ['', Validators.required],
+      prenom: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
+      role: ['ROLE_SPORTIF', Validators.required],
+      // Champs spécifiques pour les coachs
+      specialites: [[]],
+      tarifHoraire: [0],
+      // Champs spécifiques pour les sportifs
+      niveauSportif: ['débutant'],
+    }, {
+      validators: this.passwordMatchValidator
+    });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Si l'utilisateur est déjà connecté, rediriger vers la page d'accueil
+    if (this.authService.isAuthenticated()) {
+      this.router.navigate(['/']);
+    }
+  }
 
   passwordMatchValidator(form: FormGroup) {
     const password = form.get('password')?.value;
@@ -355,16 +427,77 @@ export class RegisterComponent implements OnInit {
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
-  onSubmit() {
-    if (this.registerForm.valid) {
-      console.log('Form submitted:', this.registerForm.value);
-      // Here you would typically call a service to register the user
+  /**
+   * Met à jour le tableau des spécialités à partir de la chaîne saisie
+   * @param event L'événement de changement
+   */
+  updateSpecialites(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    
+    if (value) {
+      // Diviser la chaîne par des virgules et supprimer les espaces
+      const specialites = value.split(',').map(s => s.trim()).filter(s => s);
+      this.registerForm.get('specialites')?.setValue(specialites);
     } else {
+      this.registerForm.get('specialites')?.setValue([]);
+    }
+  }
+
+  onSubmit() {
+    if (this.registerForm.invalid) {
       // Mark all fields as touched to trigger validation messages
       Object.keys(this.registerForm.controls).forEach((key) => {
         const control = this.registerForm.get(key);
         control?.markAsTouched();
       });
+      return;
     }
+    
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    const formValues = this.registerForm.value;
+    const userData: any = {
+      nom: formValues.nom,
+      prenom: formValues.prenom,
+      email: formValues.email,
+      password: formValues.password,
+      role: formValues.role
+    };
+    
+    // Ajouter les champs spécifiques selon le rôle
+    if (formValues.role === 'ROLE_COACH') {
+      userData.specialites = formValues.specialites;
+      userData.tarifHoraire = formValues.tarifHoraire;
+    } else if (formValues.role === 'ROLE_SPORTIF') {
+      userData.niveauSportif = formValues.niveauSportif;
+      userData.dateInscription = new Date().toISOString();
+    }
+    
+    this.authService.register(userData)
+      .pipe(finalize(() => {
+        this.isLoading = false;
+      }))
+      .subscribe({
+        next: (user) => {
+          // Rediriger vers la page appropriée selon le rôle
+          if (user.role === 'ROLE_COACH') {
+            this.router.navigate(['/coach/dashboard']);
+          } else if (user.role === 'ROLE_SPORTIF') {
+            this.router.navigate(['/sportif/dashboard']);
+          } else {
+            this.router.navigate(['/']);
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors de l\'inscription', error);
+          if (error.status === 409) {
+            this.errorMessage = 'Cette adresse email est déjà utilisée.';
+          } else {
+            this.errorMessage = 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.';
+          }
+        }
+      });
   }
 }

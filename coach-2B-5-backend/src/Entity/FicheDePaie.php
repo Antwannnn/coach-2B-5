@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\FicheDePaieRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: FicheDePaieRepository::class)]
 class FicheDePaie
@@ -13,19 +14,24 @@ class FicheDePaie
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[Groups(['fiche_de_paie:read', 'coach:read'])]
     private ?Uuid $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'fichesDePaie')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['fiche_de_paie:read'])]
     private ?Coach $coach = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['fiche_de_paie:read', 'coach:read'])]
     private ?string $periode = null;
 
     #[ORM\Column]
+    #[Groups(['fiche_de_paie:read', 'coach:read'])]
     private ?float $totalHeures = null;
 
     #[ORM\Column]
+    #[Groups(['fiche_de_paie:read', 'coach:read'])]
     private ?float $montantTotal = null;
 
     public function getId(): ?Uuid

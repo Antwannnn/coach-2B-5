@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Sportif } from '../../models/sportif.model';
+import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-coach-sportifs',
@@ -97,13 +100,40 @@ export class CoachSportifsComponent implements OnInit {
   sportifs: Sportif[] = [];
   isLoading = true;
   
+  constructor(
+    private userService: UserService,
+    private authService: AuthService
+  ) {}
+  
   ngOnInit(): void {
     this.loadSportifs();
   }
   
   loadSportifs(): void {
-    // In a real application, you would fetch sportifs from a service
-    // For now, we'll use mock data
+    const user = this.authService.getUser();
+    if (!user) {
+      this.isLoading = false;
+      return;
+    }
+    
+    this.userService.getSportifsByCoach(String(user.id))
+      .pipe(finalize(() => {
+        this.isLoading = false;
+      }))
+      .subscribe({
+        next: (sportifs) => {
+          this.sportifs = sportifs;
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des sportifs', error);
+          // Fallback aux données mockées en cas d'erreur
+          this.loadMockSportifs();
+        }
+      });
+  }
+  
+  loadMockSportifs(): void {
+    // Garder la méthode existante comme fallback
     setTimeout(() => {
       this.sportifs = [
         {

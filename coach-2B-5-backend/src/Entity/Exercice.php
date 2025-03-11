@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ExerciceRepository::class)]
 class Exercice
@@ -15,21 +16,27 @@ class Exercice
     #[ORM\Column(type: 'uuid', unique: true)]
     #[ORM\GeneratedValue(strategy: 'CUSTOM')]
     #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
+    #[Groups(['exercice:read', 'seance:read'])]
     private ?Uuid $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['exercice:read', 'seance:read'])]
     private ?string $nom = null;
 
     #[ORM\Column(length: 1000)]
+    #[Groups(['exercice:read', 'seance:read'])]
     private ?string $description = null;
 
     #[ORM\Column]
+    #[Groups(['exercice:read', 'seance:read'])]
     private ?int $dureeEstimee = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['exercice:read', 'seance:read'])]
     private ?string $difficulte = null;
 
     #[ORM\ManyToMany(targetEntity: Seance::class, mappedBy: 'exercices')]
+    #[Groups(['exercice:read'])]
     private Collection $seances;
 
     public function __construct()

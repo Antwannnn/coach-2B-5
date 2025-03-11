@@ -7,16 +7,13 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { NavbarComponent } from '../shared/navbar.component';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule, NavbarComponent],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule,    ],
   template: `
-    <app-navbar></app-navbar>
-
     <div class="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">

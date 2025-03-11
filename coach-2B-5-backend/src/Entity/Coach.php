@@ -6,25 +6,29 @@ use App\Repository\CoachRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: CoachRepository::class)]
 class Coach extends User
 {
     #[ORM\Column]
+    #[Groups(['coach:read', 'user:read'])]
     private array $specialites = [];
 
     #[ORM\Column]
+    #[Groups(['coach:read', 'user:read'])]
     private ?float $tarifHoraire = null;
 
     #[ORM\OneToMany(mappedBy: 'coach', targetEntity: Seance::class)]
+    #[Groups(['coach:read'])]
     private Collection $seances;
 
     #[ORM\OneToMany(mappedBy: 'coach', targetEntity: FicheDePaie::class)]
+    #[Groups(['coach:read'])]
     private Collection $fichesDePaie;
 
     public function __construct()
     {
-        parent::__construct();
         $this->seances = new ArrayCollection();
         $this->fichesDePaie = new ArrayCollection();
         $this->setRole('ROLE_COACH');

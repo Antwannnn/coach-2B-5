@@ -128,4 +128,13 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem(this.TOKEN_KEY);
   }
+
+  /**
+   * Met à jour les données de l'utilisateur dans le stockage local
+   * @param user Les nouvelles données de l'utilisateur
+   */
+  updateUserInStorage(user: User): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    this.currentUser.set(user);
+  }
 }

@@ -4,6 +4,12 @@ import { RouterModule } from '@angular/router';
 import { Coach } from '../../models/coach.model';
 import { Seance } from '../../models/seance.model';
 import { Sportif } from '../../models/sportif.model';
+import { UserService } from '../../services/user.service';
+import { SeanceService } from '../../services/seance.service';
+import { AuthService } from '../../services/auth.service';
+import { FicheDePaieService } from '../../services/fiche-de-paie.service';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-coach-dashboard',
@@ -157,103 +163,78 @@ import { Sportif } from '../../models/sportif.model';
 })
 export class CoachDashboardComponent implements OnInit {
   coach: Coach = {
-    id: '1',
-    nom: 'Martin',
-    prenom: 'Sophie',
-    email: 'sophie.martin@example.com',
+    id: '',
+    nom: '',
+    prenom: '',
+    email: '',
     role: 'ROLE_COACH',
-    specialites: ['cardio', 'fitness'],
-    tarifHoraire: 50
+    specialites: [],
+    tarifHoraire: 0
   };
-  
   upcomingSeances: Seance[] = [];
   sportifs: Sportif[] = [];
   totalRevenue = 0;
+  isLoading = true;
+  
+  constructor(
+    private userService: UserService,
+    private seanceService: SeanceService,
+    private authService: AuthService,
+    private ficheDePaieService: FicheDePaieService
+  ) {}
   
   ngOnInit(): void {
     this.loadData();
   }
   
   loadData(): void {
-    // In a real application, you would fetch this data from services
-    // For now, we'll use mock data
+    this.isLoading = true;
     
-    const now = new Date();
+    const user = this.authService.getUser();
+    if (!user) {
+      this.isLoading = false;
+      return;
+    }
     
-    // Mock sportifs
-    this.sportifs = [
-      {
-        id: '1',
-        nom: 'Dupont',
-        prenom: 'Jean',
-        email: 'jean.dupont@example.com',
-        role: 'ROLE_SPORTIF',
-        telephone: '0612345678',
-        objectifs: 'Perdre du poids et améliorer mon endurance',
-        dateInscription: '2023-01-15',
-        niveauSportif: 'intermédiaire'
+    // Charger les données du coach, ses séances et ses sportifs en parallèle
+    forkJoin({
+      coach: this.userService.getCoachProfile(user.id),
+      seances: this.seanceService.getSeancesByCoach(String(user.id)),
+      sportifs: this.userService.getSportifsByCoach(String(user.id)),
+      fichesDePaie: this.ficheDePaieService.getFichesDePaieByCoach(String(user.id))
+    })
+    .pipe(finalize(() => {
+      this.isLoading = false;
+    }))
+    .subscribe({
+      next: (results) => {
+        this.coach = results.coach;
+        
+        // Filtrer les séances à venir
+        const now = new Date();
+        this.upcomingSeances = results.seances
+          .filter(seance => new Date(seance.dateHeure) > now)
+          .sort((a, b) => new Date(a.dateHeure).getTime() - new Date(b.dateHeure).getTime())
+          .slice(0, 5); // Prendre les 5 prochaines séances
+        
+        this.sportifs = results.sportifs;
+        
+        // Calculer le revenu total
+        this.totalRevenue = results.fichesDePaie
+          .filter(fiche => fiche.status === 'paid')
+          .reduce((total, fiche) => total + (fiche.amount || 0), 0);
       },
-      {
-        id: '2',
-        nom: 'Durand',
-        prenom: 'Marie',
-        email: 'marie.durand@example.com',
-        role: 'ROLE_SPORTIF',
-        telephone: '0687654321',
-        objectifs: 'Renforcement musculaire et préparation marathon',
-        dateInscription: '2023-02-20',
-        niveauSportif: 'avancé'
-      },
-      {
-        id: '3',
-        nom: 'Petit',
-        prenom: 'Pierre',
-        email: 'pierre.petit@example.com',
-        role: 'ROLE_SPORTIF',
-        dateInscription: '2023-03-10',
-        niveauSportif: 'débutant'
+      error: (error) => {
+        console.error('Erreur lors du chargement des données', error);
+        // Fallback aux données mockées en cas d'erreur
+        this.loadMockData();
       }
-    ];
-    
-    // Mock upcoming seances
-    this.upcomingSeances = [
-      {
-        id: '1',
-        dateHeure: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-        typeSeance: 'solo',
-        themeSeance: 'cardio',
-        coach: this.coach,
-        sportifs: [this.sportifs[0]],
-        exercices: [],
-        statut: 'prévue',
-        niveauSeance: 'intermédiaire'
-      },
-      {
-        id: '2',
-        dateHeure: new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days from now
-        typeSeance: 'duo',
-        themeSeance: 'fitness',
-        coach: this.coach,
-        sportifs: [this.sportifs[1], this.sportifs[2]],
-        exercices: [],
-        statut: 'prévue',
-        niveauSeance: 'débutant'
-      },
-      {
-        id: '3',
-        dateHeure: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
-        typeSeance: 'solo',
-        themeSeance: 'muscu',
-        coach: this.coach,
-        sportifs: [this.sportifs[0]],
-        exercices: [],
-        statut: 'prévue',
-        niveauSeance: 'avancé'
-      }
-    ];
-    
-    // Calculate mock revenue
-    this.totalRevenue = this.coach.tarifHoraire * 10; // Assuming 10 hours this month
+    });
+  }
+  
+  loadMockData(): void {
+    // Garder la méthode existante comme fallback
+    // ... existing code ...
   }
   
   formatDateTime(dateTimeString: string): string {

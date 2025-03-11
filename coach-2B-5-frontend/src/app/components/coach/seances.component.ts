@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Seance, ThemeSeance, TypeSeance, NiveauSeance } from '../../models/seance.model';
+import { Seance, ThemeSeance, TypeSeance, NiveauSeance, SeanceCreation } from '../../models/seance.model';
 import { Sportif } from '../../models/sportif.model';
+import { SeanceService } from '../../services/seance.service';
+import { UserService } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-coach-seances',
@@ -234,7 +238,12 @@ export class CoachSeancesComponent implements OnInit {
   isSubmitting = false;
   currentFilter = 'upcoming';
   
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private seanceService: SeanceService,
+    private userService: UserService,
+    private authService: AuthService
+  ) {}
   
   ngOnInit(): void {
     this.initForm();
@@ -253,8 +262,24 @@ export class CoachSeancesComponent implements OnInit {
   }
   
   loadSportifs(): void {
-    // In a real application, you would fetch sportifs from a service
-    // For now, we'll use mock data
+    const user = this.authService.getUser();
+    if (!user) return;
+    
+    this.userService.getSportifsByCoach(String(user.id))
+      .subscribe({
+        next: (sportifs) => {
+          this.sportifs = sportifs;
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des sportifs', error);
+          // Fallback aux données mockées en cas d'erreur
+          this.loadMockSportifs();
+        }
+      });
+  }
+  
+  loadMockSportifs(): void {
+    // Garder la méthode existante comme fallback
     this.sportifs = [
       {
         id: '1',
@@ -292,75 +317,91 @@ export class CoachSeancesComponent implements OnInit {
   loadSeances(): void {
     this.isLoading = true;
     
-    // In a real application, you would fetch seances from a service
-    // For now, we'll use mock data
-    setTimeout(() => {
-      const now = new Date();
-      
-      // Create some mock seances
-      this.seances = [
-        {
-          id: '1',
-          dateHeure: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-          typeSeance: 'solo',
-          themeSeance: 'cardio',
-          coach: {
-            id: '1',
-            nom: 'Martin',
-            prenom: 'Sophie',
-            email: 'sophie.martin@example.com',
-            role: 'ROLE_COACH',
-            specialites: ['cardio', 'fitness'],
-            tarifHoraire: 50
-          },
-          sportifs: [this.sportifs[0]],
-          exercices: [],
-          statut: 'prévue',
-          niveauSeance: 'intermédiaire'
-        },
-        {
-          id: '2',
-          dateHeure: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-          typeSeance: 'duo',
-          themeSeance: 'fitness',
-          coach: {
-            id: '1',
-            nom: 'Martin',
-            prenom: 'Sophie',
-            email: 'sophie.martin@example.com',
-            role: 'ROLE_COACH',
-            specialites: ['cardio', 'fitness'],
-            tarifHoraire: 50
-          },
-          sportifs: [this.sportifs[1], this.sportifs[2]],
-          exercices: [],
-          statut: 'validée',
-          niveauSeance: 'débutant'
-        },
-        {
-          id: '3',
-          dateHeure: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
-          typeSeance: 'solo',
-          themeSeance: 'muscu',
-          coach: {
-            id: '1',
-            nom: 'Martin',
-            prenom: 'Sophie',
-            email: 'sophie.martin@example.com',
-            role: 'ROLE_COACH',
-            specialites: ['cardio', 'fitness'],
-            tarifHoraire: 50
-          },
-          sportifs: [this.sportifs[0]],
-          exercices: [],
-          statut: 'prévue',
-          niveauSeance: 'avancé'
-        }
-      ];
-      
-      this.filterSeances(this.currentFilter);
+    const user = this.authService.getUser();
+    if (!user) {
       this.isLoading = false;
-    }, 1000);
+      return;
+    }
+    
+    this.seanceService.getSeancesByCoach(String(user.id))
+      .pipe(finalize(() => {
+        this.isLoading = false;
+      }))
+      .subscribe({
+        next: (seances) => {
+          this.seances = seances;
+          this.filterSeances(this.currentFilter);
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des séances', error);
+          // Fallback aux données mockées en cas d'erreur
+          this.loadMockSeances();
+        }
+      });
+  }
+  
+  loadMockSeances(): void {
+    // Garder la méthode existante comme fallback
+    this.seances = [
+      {
+        id: '1',
+        dateHeure: new Date(new Date().getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+        typeSeance: 'solo',
+        themeSeance: 'cardio',
+        coach: {
+          id: '1',
+          nom: 'Martin',
+          prenom: 'Sophie',
+          email: 'sophie.martin@example.com',
+          role: 'ROLE_COACH',
+          specialites: ['cardio', 'fitness'],
+          tarifHoraire: 50
+        },
+        sportifs: [this.sportifs[0]],
+        exercices: [],
+        statut: 'prévue',
+        niveauSeance: 'intermédiaire'
+      },
+      {
+        id: '2',
+        dateHeure: new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        typeSeance: 'duo',
+        themeSeance: 'fitness',
+        coach: {
+          id: '1',
+          nom: 'Martin',
+          prenom: 'Sophie',
+          email: 'sophie.martin@example.com',
+          role: 'ROLE_COACH',
+          specialites: ['cardio', 'fitness'],
+          tarifHoraire: 50
+        },
+        sportifs: [this.sportifs[1], this.sportifs[2]],
+        exercices: [],
+        statut: 'validée',
+        niveauSeance: 'débutant'
+      },
+      {
+        id: '3',
+        dateHeure: new Date(new Date().getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days from now
+        typeSeance: 'solo',
+        themeSeance: 'muscu',
+        coach: {
+          id: '1',
+          nom: 'Martin',
+          prenom: 'Sophie',
+          email: 'sophie.martin@example.com',
+          role: 'ROLE_COACH',
+          specialites: ['cardio', 'fitness'],
+          tarifHoraire: 50
+        },
+        sportifs: [this.sportifs[0]],
+        exercices: [],
+        statut: 'prévue',
+        niveauSeance: 'avancé'
+      }
+    ];
+    this.filterSeances(this.currentFilter);
   }
   
   filterSeances(filter: string): void {
@@ -404,23 +445,37 @@ export class CoachSeancesComponent implements OnInit {
   }
   
   cancelSeance(seanceId: string): void {
-    // In a real application, you would call a service to cancel the seance
-    // For now, we'll just update the local state
-    const seance = this.seances.find(s => s.id === seanceId);
-    if (seance) {
-      seance.statut = 'annulée';
-      this.filterSeances(this.currentFilter);
-    }
+    this.seanceService.cancelSeance(seanceId)
+      .subscribe({
+        next: (updatedSeance) => {
+          // Mettre à jour la séance dans le tableau local
+          const index = this.seances.findIndex(s => s.id === seanceId);
+          if (index !== -1) {
+            this.seances[index] = updatedSeance;
+            this.filterSeances(this.currentFilter);
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors de l\'annulation de la séance', error);
+        }
+      });
   }
   
   validateSeance(seanceId: string): void {
-    // In a real application, you would call a service to validate the seance
-    // For now, we'll just update the local state
-    const seance = this.seances.find(s => s.id === seanceId);
-    if (seance) {
-      seance.statut = 'validée';
-      this.filterSeances(this.currentFilter);
-    }
+    this.seanceService.validateSeance(seanceId)
+      .subscribe({
+        next: (updatedSeance) => {
+          // Mettre à jour la séance dans le tableau local
+          const index = this.seances.findIndex(s => s.id === seanceId);
+          if (index !== -1) {
+            this.seances[index] = updatedSeance;
+            this.filterSeances(this.currentFilter);
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors de la validation de la séance', error);
+        }
+      });
   }
   
   onSubmit(): void {
@@ -428,43 +483,33 @@ export class CoachSeancesComponent implements OnInit {
     
     this.isSubmitting = true;
     
-    const formValues = this.seanceForm.value;
-    const selectedSportifs = this.sportifs.filter(s => 
-      formValues.sportifIds.includes(s.id)
-    );
-    
-    // In a real application, you would send this to a service
-    // For now, we'll just add it to our local array
-    setTimeout(() => {
-      const newSeance: Seance = {
-        id: (this.seances.length + 1).toString(),
-        dateHeure: formValues.dateHeure,
-        typeSeance: formValues.typeSeance as TypeSeance,
-        themeSeance: formValues.themeSeance as ThemeSeance,
-        niveauSeance: formValues.niveauSeance as NiveauSeance,
-        coach: {
-          id: '1',
-          nom: 'Martin',
-          prenom: 'Sophie',
-          email: 'sophie.martin@example.com',
-          role: 'ROLE_COACH',
-          specialites: ['cardio', 'fitness'],
-          tarifHoraire: 50
-        },
-        sportifs: selectedSportifs,
-        exercices: [],
-        statut: 'prévue'
-      };
-      
-      this.seances.push(newSeance);
-      this.filterSeances(this.currentFilter);
-      
-      // Reset form
-      this.seanceForm.reset({
-        sportifIds: []
-      });
-      
+    const user = this.authService.getUser();
+    if (!user) {
       this.isSubmitting = false;
-    }, 1000);
+      return;
+    }
+    
+    const seanceData: SeanceCreation = {
+      ...this.seanceForm.value,
+      coachId: String(user.id)
+    };
+    
+    this.seanceService.createSeance(seanceData)
+      .pipe(finalize(() => {
+        this.isSubmitting = false;
+      }))
+      .subscribe({
+        next: (newSeance) => {
+          // Ajouter la nouvelle séance au tableau local
+          this.seances.push(newSeance);
+          this.filterSeances(this.currentFilter);
+          
+          // Réinitialiser le formulaire
+          this.seanceForm.reset();
+        },
+        error: (error) => {
+          console.error('Erreur lors de la création de la séance', error);
+        }
+      });
   }
 } 

@@ -12,13 +12,13 @@ export const routes: Routes = [
   // Public routes
   { path: '', component: HomeComponent },
   { path: 'coachs', component: CoachListComponent },
-  { path: 'register', component: RegisterComponent },
+  { 
+    path: 'register', 
+    component: RegisterComponent,
+  },
   {
     path: 'login',
-    loadComponent: () =>
-      import('./components/public/login.component').then(
-        (m) => m.LoginComponent
-      ),
+    component: LoginComponent,
   },
 
   // Protected routes - Sportif
@@ -85,10 +85,31 @@ export const routes: Routes = [
     data: { role: 'ROLE_RESPONSABLE' },
     children: [
       {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./components/responsable/dashboard.component').then(
+            (m) => m.ResponsableDashboardComponent
+          ),
+      },
+      {
+        path: 'profile',
+        loadComponent: () =>
+          import('./components/responsable/profile.component').then(
+            (m) => m.ResponsableProfileComponent
+          ),
+      },
+      {
         path: 'coachs',
         loadComponent: () =>
           import('./components/responsable/coachs.component').then(
             (m) => m.ResponsableCoachsComponent
+          ),
+      },
+      {
+        path: 'sportifs',
+        loadComponent: () =>
+          import('./components/responsable/sportifs.component').then(
+            (m) => m.ResponsableSportifsComponent
           ),
       },
       {
@@ -98,7 +119,14 @@ export const routes: Routes = [
             (m) => m.ResponsableFichesDePaieComponent
           ),
       },
-      { path: '', redirectTo: 'coachs', pathMatch: 'full' },
+      {
+        path: 'statistiques',
+        loadComponent: () =>
+          import('./components/responsable/statistiques.component').then(
+            (m) => m.ResponsableStatistiquesComponent
+          ),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
 

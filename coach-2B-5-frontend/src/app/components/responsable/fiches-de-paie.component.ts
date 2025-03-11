@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FicheDePaie } from '../../models/fiche-de-paie.model';
 import { Coach } from '../../models/coach.model';
+import { UserService } from '../../services/user.service';
+import { FicheDePaieService } from '../../services/fiche-de-paie.service';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-responsable-fiches-de-paie',
@@ -323,138 +327,173 @@ import { Coach } from '../../models/coach.model';
   styles: [],
 })
 export class ResponsableFichesDePaieComponent implements OnInit {
-  coaches: Coach[] = [
-    {
-      id: '1',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      email: 'jean.dupont@coachapp.com',
-      role: 'ROLE_COACH',
-      specialites: ['Musculation'],
-      tarifHoraire: 45,
-      description: 'Coach spécialisé en musculation et remise en forme',
-      createdAt: '2023-01-15',
-      sportifs: [],
-      // Propriétés pour la compatibilité
-      firstName: 'Jean',
-      lastName: 'Dupont',
-      speciality: 'Musculation',
-    },
-    {
-      id: '2',
-      nom: 'Laurent',
-      prenom: 'Marie',
-      email: 'marie.laurent@coachapp.com',
-      role: 'ROLE_COACH',
-      specialites: ['Yoga'],
-      tarifHoraire: 40,
-      description: 'Coach de yoga et méditation',
-      createdAt: '2023-02-20',
-      sportifs: [],
-      // Propriétés pour la compatibilité
-      firstName: 'Marie',
-      lastName: 'Laurent',
-      speciality: 'Yoga',
-    },
-    {
-      id: '3',
-      nom: 'Martin',
-      prenom: 'Thomas',
-      email: 'thomas.martin@coachapp.com',
-      role: 'ROLE_COACH',
-      specialites: ['Cardio'],
-      tarifHoraire: 42,
-      description: 'Spécialiste en entraînement cardio-vasculaire',
-      createdAt: '2023-03-10',
-      sportifs: [],
-      // Propriétés pour la compatibilité
-      firstName: 'Thomas',
-      lastName: 'Martin',
-      speciality: 'Cardio',
-    },
-  ];
-
-  fichesDePaie: FicheDePaie[] = [
-    {
-      id: '1',
-      coachId: '1',
-      month: '3',
-      year: '2023',
-      amount: 1350,
-      hoursWorked: 30,
-      status: 'paid',
-      createdAt: '2023-03-31',
-      // Propriétés pour la compatibilité avec le nouveau modèle
-      coach: this.coaches[0],
-      periode: '03/2023',
-      totalHeures: 30,
-      montantTotal: 1350
-    },
-    {
-      id: '2',
-      coachId: '2',
-      month: '3',
-      year: '2023',
-      amount: 1200,
-      hoursWorked: 30,
-      status: 'paid',
-      createdAt: '2023-03-31',
-      // Propriétés pour la compatibilité avec le nouveau modèle
-      coach: this.coaches[1],
-      periode: '03/2023',
-      totalHeures: 30,
-      montantTotal: 1200
-    },
-    {
-      id: '3',
-      coachId: '3',
-      month: '3',
-      year: '2023',
-      amount: 1260,
-      hoursWorked: 30,
-      status: 'paid',
-      createdAt: '2023-03-31',
-      // Propriétés pour la compatibilité avec le nouveau modèle
-      coach: this.coaches[2],
-      periode: '03/2023',
-      totalHeures: 30,
-      montantTotal: 1260
-    },
-    {
-      id: '4',
-      coachId: '1',
-      month: '4',
-      year: '2023',
-      amount: 1350,
-      hoursWorked: 30,
-      status: 'pending',
-      createdAt: '2023-04-30',
-      // Propriétés pour la compatibilité avec le nouveau modèle
-      coach: this.coaches[0],
-      periode: '04/2023',
-      totalHeures: 30,
-      montantTotal: 1350
-    },
-    {
-      id: '5',
-      coachId: '2',
-      month: '4',
-      year: '2023',
-      amount: 1200,
-      hoursWorked: 30,
-      status: 'pending',
-      createdAt: '2023-04-30',
-      // Propriétés pour la compatibilité avec le nouveau modèle
-      coach: this.coaches[1],
-      periode: '04/2023',
-      totalHeures: 30,
-      montantTotal: 1200
-    },
-  ];
-
-  constructor() {}
-
-  ngOnInit(): void {}
+  coaches: Coach[] = [];
+  fichesDePaie: FicheDePaie[] = [];
+  isLoading = true;
+  
+  constructor(
+    private userService: UserService,
+    private ficheDePaieService: FicheDePaieService
+  ) {}
+  
+  ngOnInit(): void {
+    this.loadData();
+  }
+  
+  loadData(): void {
+    this.isLoading = true;
+    
+    forkJoin({
+      coaches: this.userService.getAllCoachs(),
+      fichesDePaie: this.ficheDePaieService.getAllFichesDePaie()
+    })
+    .pipe(finalize(() => {
+      this.isLoading = false;
+    }))
+    .subscribe({
+      next: (results) => {
+        this.coaches = results.coaches;
+        this.fichesDePaie = results.fichesDePaie;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des données', error);
+        // Fallback aux données mockées en cas d'erreur
+        this.loadMockData();
+      }
+    });
+  }
+  
+  loadMockData(): void {
+    // Garder les données mockées existantes
+    this.coaches = [
+      {
+        id: '1',
+        nom: 'Dupont',
+        prenom: 'Jean',
+        email: 'jean.dupont@coachapp.com',
+        role: 'ROLE_COACH',
+        specialites: ['Musculation'],
+        tarifHoraire: 45,
+        description: 'Coach spécialisé en musculation et remise en forme',
+        createdAt: '2023-01-15',
+        sportifs: [],
+        // Propriétés pour la compatibilité
+        firstName: 'Jean',
+        lastName: 'Dupont',
+        speciality: 'Musculation',
+      },
+      {
+        id: '2',
+        nom: 'Laurent',
+        prenom: 'Marie',
+        email: 'marie.laurent@coachapp.com',
+        role: 'ROLE_COACH',
+        specialites: ['Yoga'],
+        tarifHoraire: 40,
+        description: 'Coach de yoga et méditation',
+        createdAt: '2023-02-20',
+        sportifs: [],
+        // Propriétés pour la compatibilité
+        firstName: 'Marie',
+        lastName: 'Laurent',
+        speciality: 'Yoga',
+      },
+      {
+        id: '3',
+        nom: 'Martin',
+        prenom: 'Thomas',
+        email: 'thomas.martin@coachapp.com',
+        role: 'ROLE_COACH',
+        specialites: ['Cardio'],
+        tarifHoraire: 42,
+        description: 'Spécialiste en entraînement cardio-vasculaire',
+        createdAt: '2023-03-10',
+        sportifs: [],
+        // Propriétés pour la compatibilité
+        firstName: 'Thomas',
+        lastName: 'Martin',
+        speciality: 'Cardio',
+      },
+    ];
+    
+    this.fichesDePaie = [
+      {
+        id: '1',
+        coachId: '1',
+        month: '3',
+        year: '2023',
+        amount: 1350,
+        hoursWorked: 30,
+        status: 'paid',
+        createdAt: '2023-03-31',
+        // Propriétés pour la compatibilité avec le nouveau modèle
+        coach: this.coaches[0],
+        periode: '03/2023',
+        totalHeures: 30,
+        montantTotal: 1350
+      },
+      {
+        id: '2',
+        coachId: '2',
+        month: '3',
+        year: '2023',
+        amount: 1200,
+        hoursWorked: 30,
+        status: 'paid',
+        createdAt: '2023-03-31',
+        // Propriétés pour la compatibilité avec le nouveau modèle
+        coach: this.coaches[1],
+        periode: '03/2023',
+        totalHeures: 30,
+        montantTotal: 1200
+      },
+      {
+        id: '3',
+        coachId: '3',
+        month: '3',
+        year: '2023',
+        amount: 1260,
+        hoursWorked: 30,
+        status: 'paid',
+        createdAt: '2023-03-31',
+        // Propriétés pour la compatibilité avec le nouveau modèle
+        coach: this.coaches[2],
+        periode: '03/2023',
+        totalHeures: 30,
+        montantTotal: 1260
+      },
+      {
+        id: '4',
+        coachId: '1',
+        month: '4',
+        year: '2023',
+        amount: 1350,
+        hoursWorked: 30,
+        status: 'pending',
+        createdAt: '2023-04-30',
+        // Propriétés pour la compatibilité avec le nouveau modèle
+        coach: this.coaches[0],
+        periode: '04/2023',
+        totalHeures: 30,
+        montantTotal: 1350
+      },
+      {
+        id: '5',
+        coachId: '2',
+        month: '4',
+        year: '2023',
+        amount: 1200,
+        hoursWorked: 30,
+        status: 'pending',
+        createdAt: '2023-04-30',
+        // Propriétés pour la compatibilité avec le nouveau modèle
+        coach: this.coaches[1],
+        periode: '04/2023',
+        totalHeures: 30,
+        montantTotal: 1200
+      },
+    ];
+  }
 
   getCoachName(coachId: string | number | undefined): string {
     if (coachId === undefined) return 'Coach inconnu';
