@@ -1,0 +1,37 @@
+Cas d'utilisation : Définition des acteurs et de leurs fonctionnalités
+ Acteurs du système📌
+1. Utilisateur anonyme (de l’application Angular)
+•Peut consulter les informations publiques (présentation des coachs, des types de séances, 
+planning des créneaux ouverts). 
+•Peut s'inscrire pour devenir "sportif". 
+2. Sportif (utilisateur connecté sur l’application Angular)
+•Peut consulter ses séances planifiées. 
+•Peut voir les exercices de ses séances passées et à venir. 
+•Peut consulter l’historique de ses entraînements validés. 
+•Peut s'inscrire à une séance libre si un coach a un créneau disponible. 
+•Peut annuler une séance réservée sous certaines conditions (délai, nombre d’annulations max, 
+etc.). 
+3. Coach (utilisateur du back-office Symfony avec accès restreint)
+•Peut consulter ses séances à venir. 
+•Peut créer/modifier des séances en respectant les règles du système. 
+•Peut associer 1 à 3 sportifs à une séance. 
+•Peut enregistrer et valider la réalisation d’une séance. 
+•Peut gérer la liste des exercices associés aux séances. 
+4. Responsable de salle (utilisateur du back-office Symfony avec accès complet)
+•Peut tout faire qu'un coach peut faire. 
+•Peut gérer la liste des coachs et des sportifs. 
+•Peut analyser les statistiques (fréquentation, taux de remplissage des séances, popularité des 
+thèmes d’entraînement). 
+•Peut gérer les paiements des coachs (avec accès aux séances validées pour générer la paie). 
+•Peut annuler une séance planifiée.
+
+ Cas d'utilisation principaux📌
+Voici les cas d'utilisation les plus importants :
+•Un internaute consulte les informations publiques sur l’application. 
+•Un internaute s’inscrit en tant que sportif. 
+•Un sportif consulte son planning d’entraînement et les exercices associés. 
+•Un sportif réserve une séance disponible. 
+•Un coach planifie une séance d'entraînement avec des sportifs. 
+•Un coach valide une séance terminée et enregistre la présence des sportifs. 
+•Un responsable visualise les statistiques de fréquentation des coachs et des séances. 
+•Un responsable génère la fiche de paiement des coachs en fonction des séances réalisées.

@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://votre-domaine.com/api' // URL de production
-}; 
+  apiUrl: '/api', // This will use the relative path in production
+};
+

@@ -1,0 +1,37 @@
+1. Utilisateur (hérité par Sportif et Coach)
+•id (UUID) 
+•nom 
+•prénom 
+•email 
+•mot_de_passe 
+•rôle (coach, sportif, responsable) 
+2. Sportif (hérite d’Utilisateur)
+•date_inscription 
+•niveau_sportif (débutant, intermédiaire, avancé)
+3. Coach (hérite d’Utilisateur)
+•spécialités (liste des thèmes d’entraînement
+proposés. Cf. Séances) 
+•tarif_horaire 
+4. Séance
+•id 
+•date_heure 
+•type_seance (solo, duo, trio)
+•theme_seance (fitness, cardio, muscu, crossfit, ...)
+•coach_id 
+•sportifs (relation ManyToMany avec Sportif, max
+3) 
+•exercices (relation ManyToMany avec Exercice) 
+•statut (prévue, validée, annulée) 
+•niveau_sceance (débutant, intermédiaire, avancé) 
+5. Exercice
+•id 
+•nom 
+•description 
+•duree_estimee 
+•difficulte (facile, moyen, difficile) 
+6. Fiche de paie
+•id 
+•coach_id 
+•période (mois ou semaine) 
+•total_heures 
+•montant_total
