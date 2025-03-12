@@ -44,6 +44,11 @@ class Exercice
         $this->seances = new ArrayCollection();
     }
 
+    public function __toString(): string
+    {
+        return $this->nom ?? '';
+    }
+
     public function getId(): ?Uuid
     {
         return $this->id;

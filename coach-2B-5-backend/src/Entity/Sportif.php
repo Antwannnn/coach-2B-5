@@ -30,6 +30,11 @@ class Sportif extends User
         $this->setRole('ROLE_SPORTIF');
     }
 
+    public function __toString(): string
+    {
+        return $this->getNom() . ' ' . $this->getPrenom();
+    }
+
     public function getDateInscription(): ?\DateTimeInterface
     {
         return $this->dateInscription;

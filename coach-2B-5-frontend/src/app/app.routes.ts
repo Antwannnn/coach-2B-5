@@ -6,7 +6,7 @@ import { LoginComponent } from './components/public/login.component';
 import { CoachDashboardComponent } from './components/coach/dashboard.component';
 import { SportifDashboardComponent } from './components/sportif/dashboard.component';
 import { authGuard } from './guards/auth.guard';
-import { roleGuard } from './guards/role.guard';
+import { roleGuard, adminGuard, userGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   // Public routes
@@ -128,6 +128,31 @@ export const routes: Routes = [
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
+  },
+
+  // Articles routes with authentication
+  {
+    path: 'articles',
+    canActivate: [authGuard, userGuard],
+    loadComponent: () =>
+      import('./components/articles/articles-list.component').then(
+        (m) => m.ArticlesListComponent
+      ),
+  },
+  {
+    path: 'article/add',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () =>
+      import('./components/articles/add-article.component').then(
+        (m) => m.AddArticleComponent
+      ),
+  },
+  {
+    path: 'categories',
+    loadComponent: () =>
+      import('./components/categories/categories-list.component').then(
+        (m) => m.CategoriesListComponent
+      ),
   },
 
   // Fallback route

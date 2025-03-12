@@ -34,6 +34,11 @@ class Coach extends User
         $this->setRole('ROLE_COACH');
     }
 
+    public function __toString(): string
+    {
+        return $this->getNom() . ' ' . $this->getPrenom();
+    }
+
     public function getSpecialites(): array
     {
         return $this->specialites;

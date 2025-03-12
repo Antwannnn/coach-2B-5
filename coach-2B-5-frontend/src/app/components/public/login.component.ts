@@ -12,7 +12,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule,    ],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule],
   template: `
     <div class="min-h-screen bg-gray-50 flex flex-col py-12 sm:px-6 lg:px-8">
       <div class="sm:mx-auto sm:w-full sm:max-w-md">
@@ -32,6 +32,11 @@ import { AuthService } from '../../services/auth.service';
 
       <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          <!-- Affichage des erreurs -->
+          <div *ngIf="errorMessage" class="mb-4 bg-red-50 border border-red-200 text-red-800 rounded-lg p-4">
+            {{ errorMessage }}
+          </div>
+
           <form
             [formGroup]="loginForm"
             (ngSubmit)="onSubmit()"
@@ -58,11 +63,17 @@ import { AuthService } from '../../services/auth.service';
               <div
                 *ngIf="
                   loginForm.get('email')?.invalid &&
-                  loginForm.get('email')?.touched
+                  (loginForm.get('email')?.dirty ||
+                    loginForm.get('email')?.touched)
                 "
-                class="text-red-500 text-sm mt-1"
+                class="mt-1 text-sm text-red-600"
               >
-                Veuillez entrer une adresse email valide
+                <div *ngIf="loginForm.get('email')?.errors?.['required']">
+                  L'email est requis
+                </div>
+                <div *ngIf="loginForm.get('email')?.errors?.['email']">
+                  Format d'email invalide
+                </div>
               </div>
             </div>
 
@@ -87,37 +98,14 @@ import { AuthService } from '../../services/auth.service';
               <div
                 *ngIf="
                   loginForm.get('password')?.invalid &&
-                  loginForm.get('password')?.touched
+                  (loginForm.get('password')?.dirty ||
+                    loginForm.get('password')?.touched)
                 "
-                class="text-red-500 text-sm mt-1"
+                class="mt-1 text-sm text-red-600"
               >
-                Le mot de passe est requis
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between">
-              <div class="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <label
-                  for="remember-me"
-                  class="ml-2 block text-sm text-gray-900"
-                >
-                  Se souvenir de moi
-                </label>
-              </div>
-
-              <div class="text-sm">
-                <a
-                  href="#"
-                  class="font-medium text-indigo-600 hover:text-indigo-500"
-                >
-                  Mot de passe oublié?
-                </a>
+                <div *ngIf="loginForm.get('password')?.errors?.['required']">
+                  Le mot de passe est requis
+                </div>
               </div>
             </div>
 
@@ -125,52 +113,54 @@ import { AuthService } from '../../services/auth.service';
               <button
                 type="submit"
                 [disabled]="loginForm.invalid || isLoading"
-                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span *ngIf="isLoading">Chargement...</span>
-                <span *ngIf="!isLoading">Se connecter</span>
+                <span *ngIf="isLoading" class="mr-2">
+                  <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
+                {{ isLoading ? 'Connexion en cours...' : 'Se connecter' }}
               </button>
-            </div>
-
-            <div *ngIf="errorMessage" class="text-red-500 text-center mt-2">
-              {{ errorMessage }}
             </div>
           </form>
         </div>
       </div>
     </div>
   `,
-  styles: [],
 })
 export class LoginComponent implements OnInit {
-  loginForm: FormGroup;
-  isLoading = false;
-  errorMessage = '';
-  returnUrl = '/';
+  loginForm!: FormGroup;
+  returnUrl: string = '/';
+  isLoading: boolean = false;
+  errorMessage: string = '';
 
   constructor(
-    private fb: FormBuilder,
+    private formBuilder: FormBuilder,
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-    });
-  }
+  ) {}
 
   ngOnInit(): void {
-    // Get return url from route parameters or default to '/'
+    // Initialiser le formulaire
+    this.loginForm = this.formBuilder.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', Validators.required],
+    });
+
+    // Récupérer l'URL de retour des query params ou utiliser la valeur par défaut
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
 
-    // Redirect if already logged in
+    // Si l'utilisateur est déjà connecté, rediriger vers la page d'accueil
     if (this.authService.isAuthenticated()) {
-      this.router.navigate([this.returnUrl]);
+      this.router.navigate(['/']);
     }
   }
 
   onSubmit(): void {
+    // Arrêter si le formulaire est invalide
     if (this.loginForm.invalid) {
       return;
     }
@@ -181,24 +171,14 @@ export class LoginComponent implements OnInit {
     const { email, password } = this.loginForm.value;
 
     this.authService.login(email, password).subscribe({
-      next: (user) => {
+      next: () => {
         this.isLoading = false;
-
-        // Navigate to appropriate dashboard based on user role
-        if (user.role === 'ROLE_COACH') {
-          this.router.navigate(['/coach/dashboard']);
-        } else if (user.role === 'ROLE_SPORTIF') {
-          this.router.navigate(['/sportif/dashboard']);
-        } else if (user.role === 'ROLE_RESPONSABLE') {
-          this.router.navigate(['/responsable/coachs']);
-        } else {
-          this.router.navigate([this.returnUrl]);
-        }
+        this.router.navigateByUrl(this.returnUrl);
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = 'Identifiants invalides. Veuillez réessayer.';
-        console.error('Login error', error);
+        this.errorMessage = error.message || 'Une erreur est survenue lors de la connexion. Veuillez réessayer.';
+        console.error('Erreur de connexion:', error);
       },
     });
   }

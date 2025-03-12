@@ -59,6 +59,12 @@ class Seance
         $this->exercices = new ArrayCollection();
     }
 
+    public function __toString(): string
+    {
+        $date = $this->dateHeure ? $this->dateHeure->format('d/m/Y H:i') : '';
+        return $this->themeSeance . ' (' . $date . ')';
+    }
+
     public function getId(): ?Uuid
     {
         return $this->id;

@@ -17,3 +17,29 @@ export const roleGuard: CanActivateFn = (route, state) => {
   router.navigate(['/']);
   return false;
 };
+
+export const adminGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.hasRole('ROLE_ADMIN')) {
+    return true;
+  }
+
+  // If user is not an admin, redirect to home
+  router.navigate(['/']);
+  return false;
+};
+
+export const userGuard: CanActivateFn = (route, state) => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.hasRole('ROLE_USER') || authService.hasRole('ROLE_ADMIN')) {
+    return true;
+  }
+
+  // If user is not a user or admin, redirect to login
+  router.navigate(['/login']);
+  return false;
+};

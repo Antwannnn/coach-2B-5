@@ -90,4 +90,49 @@ export class UserService {
   getSportifsByCoach(coachId: string): Observable<Sportif[]> {
     return this.apiService.get<Sportif[]>(`coachs/${coachId}/sportifs`);
   }
+
+  /**
+   * Récupère la liste des responsables
+   * @returns Observable avec la liste des responsables
+   */
+  getAllResponsables(): Observable<User[]> {
+    return this.apiService.get<User[]>('responsables');
+  }
+
+  /**
+   * Récupère le profil d'un responsable
+   * @param id ID du responsable
+   * @returns Observable avec les données du responsable
+   */
+  getResponsableProfile(id: string | number): Observable<User> {
+    return this.apiService.get<User>(`responsables/${id}`);
+  }
+
+  /**
+   * Crée un nouveau responsable
+   * @param responsableData Données du responsable à créer
+   * @returns Observable avec les données du responsable créé
+   */
+  createResponsable(responsableData: Partial<User>): Observable<User> {
+    return this.apiService.post<User>('responsables', responsableData);
+  }
+
+  /**
+   * Met à jour le profil d'un responsable
+   * @param id ID du responsable
+   * @param responsableData Données à mettre à jour
+   * @returns Observable avec les données mises à jour
+   */
+  updateResponsableProfile(id: string | number, responsableData: Partial<User>): Observable<User> {
+    return this.apiService.put<User>(`responsables/${id}`, responsableData);
+  }
+
+  /**
+   * Supprime un responsable
+   * @param id ID du responsable
+   * @returns Observable avec la réponse de suppression
+   */
+  deleteResponsable(id: string | number): Observable<any> {
+    return this.apiService.delete<any>(`responsables/${id}`);
+  }
 } 

@@ -17,6 +17,11 @@ export const AuthInterceptor: HttpInterceptorFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
   
+  // Skip adding token for login request
+  if (request.url.includes('/api/login')) {
+    return next(request);
+  }
+  
   // Get the auth token from the service
   const token = authService.getToken();
 

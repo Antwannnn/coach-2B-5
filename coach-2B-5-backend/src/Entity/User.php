@@ -13,7 +13,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ORM\Table(name: '`user`')]
 #[ORM\InheritanceType("JOINED")]
 #[ORM\DiscriminatorColumn(name: "type", type: "string")]
-#[ORM\DiscriminatorMap(["user" => "User", "sportif" => "Sportif", "coach" => "Coach"])]
+#[ORM\DiscriminatorMap(["user" => "User", "sportif" => "Sportif", "coach" => "Coach", "responsable" => "Responsable"])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
