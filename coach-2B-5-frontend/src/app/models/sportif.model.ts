@@ -9,6 +9,9 @@ export interface Sportif extends User {
   seances?: Seance[]; // Relation avec les séances
   telephone?: string; // Propriété optionnelle pour le téléphone
   objectifs?: string; // Propriété optionnelle pour les objectifs
+  actif?: boolean; // Statut du sportif (actif ou inactif)
+  nombreSeances?: number; // Nombre de séances suivies
+  createdAt?: string; // Date de création du compte
 }
 
 export interface SportifRegistration extends Omit<Sportif, 'id' | 'seances'> {

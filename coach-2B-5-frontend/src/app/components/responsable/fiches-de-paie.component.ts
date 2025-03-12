@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { FicheDePaie } from '../../models/fiche-de-paie.model';
 import { Coach } from '../../models/coach.model';
 import { UserService } from '../../services/user.service';
@@ -11,87 +10,14 @@ import { finalize } from 'rxjs/operators';
 @Component({
   selector: 'app-responsable-fiches-de-paie',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="min-h-screen bg-gray-100">
-      <!-- Navigation -->
-      <nav class="bg-teal-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <span class="text-white text-xl font-bold">CoachApp</span>
-              </div>
-              <div class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
-                  <a
-                    routerLink="/responsable/coachs"
-                    class="text-gray-300 hover:bg-teal-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                    >Coachs</a
-                  >
-                  <a
-                    routerLink="/responsable/fiches-de-paie"
-                    class="bg-teal-800 text-white px-3 py-2 rounded-md text-sm font-medium"
-                    aria-current="page"
-                    >Fiches de paie</a
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="hidden md:block">
-              <div class="ml-4 flex items-center md:ml-6">
-                <button
-                  type="button"
-                  class="bg-teal-800 p-1 rounded-full text-gray-200 hover:text-white focus:outline-none"
-                >
-                  <span class="sr-only">Voir les notifications</span>
-                  <svg
-                    class="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                  </svg>
-                </button>
-
-                <!-- Profile dropdown -->
-                <div class="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      class="max-w-xs bg-teal-800 rounded-full flex items-center text-sm focus:outline-none"
-                      id="user-menu-button"
-                    >
-                      <span class="sr-only">Ouvrir le menu utilisateur</span>
-                      <span
-                        class="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold"
-                      >
-                        R
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <header class="bg-white shadow">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-gray-900">Fiches de paie</h1>
-        </div>
-      </header>
-
-      <main>
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Gestion des Fiches de Paie</h1>
+        
+        <!-- Contenu principal -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
           <!-- Filters -->
           <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
             <div class="md:grid md:grid-cols-3 md:gap-6">
@@ -245,7 +171,7 @@ import { finalize } from 'rxjs/operators';
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                           <div class="text-sm text-gray-900">
-                            {{ fiche.amount ? fiche.amount.toFixed(2) : fiche.montantTotal?.toFixed(2) }} €
+                            {{ fiche.amount ? fiche.amount.toFixed(2) : fiche.montantTotal.toFixed(2) }} €
                           </div>
                           <div class="text-sm text-gray-500">
                             {{ fiche.hoursWorked || fiche.totalHeures || 0 }} heures
@@ -321,7 +247,7 @@ import { finalize } from 'rxjs/operators';
             </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   `,
   styles: [],
@@ -330,6 +256,11 @@ export class ResponsableFichesDePaieComponent implements OnInit {
   coaches: Coach[] = [];
   fichesDePaie: FicheDePaie[] = [];
   isLoading = true;
+  
+  // Filtres
+  selectedMonth: string = (new Date().getMonth() + 1).toString(); // Mois courant
+  selectedYear: string = new Date().getFullYear().toString(); // Année courante
+  selectedCoachId: string = '';
   
   constructor(
     private userService: UserService,
@@ -354,6 +285,7 @@ export class ResponsableFichesDePaieComponent implements OnInit {
       next: (results) => {
         this.coaches = results.coaches;
         this.fichesDePaie = results.fichesDePaie;
+        this.applyFilters();
       },
       error: (error) => {
         console.error('Erreur lors du chargement des données', error);
@@ -361,6 +293,34 @@ export class ResponsableFichesDePaieComponent implements OnInit {
         this.loadMockData();
       }
     });
+  }
+  
+  applyFilters(): void {
+    // Filtrer les fiches de paie selon les critères sélectionnés
+    let filtered = [...this.fichesDePaie];
+    
+    if (this.selectedMonth) {
+      filtered = filtered.filter(fiche => 
+        (fiche.month && fiche.month.toString() === this.selectedMonth) || 
+        (fiche.periode && fiche.periode.split('/')[0] === this.selectedMonth)
+      );
+    }
+    
+    if (this.selectedYear) {
+      filtered = filtered.filter(fiche => 
+        (fiche.year && fiche.year.toString() === this.selectedYear) || 
+        (fiche.periode && fiche.periode.split('/')[1] === this.selectedYear)
+      );
+    }
+    
+    if (this.selectedCoachId) {
+      filtered = filtered.filter(fiche => 
+        (fiche.coachId && fiche.coachId.toString() === this.selectedCoachId) || 
+        (fiche.coach && fiche.coach.id.toString() === this.selectedCoachId)
+      );
+    }
+    
+    this.fichesDePaie = filtered;
   }
   
   loadMockData(): void {
@@ -541,5 +501,55 @@ export class ResponsableFichesDePaieComponent implements OnInit {
       default:
         return status;
     }
+  }
+
+  validateFicheDePaie(fiche: FicheDePaie): void {
+    this.ficheDePaieService.updateFicheDePaie(fiche.id.toString(), { status: 'paid' })
+      .subscribe({
+        next: (updatedFiche) => {
+          // Mettre à jour la fiche localement
+          const index = this.fichesDePaie.findIndex(f => f.id === fiche.id);
+          if (index !== -1) {
+            this.fichesDePaie[index] = { ...this.fichesDePaie[index], status: 'paid' };
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors de la validation de la fiche de paie', error);
+        }
+      });
+  }
+  
+  rejectFicheDePaie(fiche: FicheDePaie): void {
+    this.ficheDePaieService.updateFicheDePaie(fiche.id.toString(), { status: 'rejected' })
+      .subscribe({
+        next: (updatedFiche) => {
+          // Mettre à jour la fiche localement
+          const index = this.fichesDePaie.findIndex(f => f.id === fiche.id);
+          if (index !== -1) {
+            this.fichesDePaie[index] = { ...this.fichesDePaie[index], status: 'rejected' };
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors du rejet de la fiche de paie', error);
+        }
+      });
+  }
+  
+  generateFichesDePaie(): void {
+    // Utiliser directement les valeurs string
+    const month = this.selectedMonth;
+    const year = this.selectedYear;
+    
+    this.ficheDePaieService.generateFichesDePaie(month, year)
+      .subscribe({
+        next: (fichesDePaie: FicheDePaie[]) => {
+          // Ajouter les nouvelles fiches à la liste
+          this.fichesDePaie = [...this.fichesDePaie, ...fichesDePaie];
+          this.applyFilters();
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la génération des fiches de paie', error);
+        }
+      });
   }
 }

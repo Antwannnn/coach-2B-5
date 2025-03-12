@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Seance } from '../../models/seance.model';
+import { SeanceService } from '../../services/seance.service';
+import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-sportif-seances',
@@ -114,6 +117,7 @@ import { Seance } from '../../models/seance.model';
       </div>
     </div>
   `,
+  styles: [],
 })
 export class SportifSeancesComponent implements OnInit {
   seances: Seance[] = [];
@@ -121,11 +125,45 @@ export class SportifSeancesComponent implements OnInit {
   isLoading = true;
   currentFilter = 'upcoming';
   
+  constructor(
+    private seanceService: SeanceService,
+    private authService: AuthService
+  ) {}
+  
   ngOnInit(): void {
     this.loadSeances();
   }
   
   loadSeances(): void {
+    this.isLoading = true;
+    
+    // Récupérer l'ID du sportif connecté
+    const userId = this.authService.getUser()?.id;
+    
+    if (userId) {
+      this.seanceService.getSeancesBySportif(userId.toString())
+        .pipe(finalize(() => {
+          this.isLoading = false;
+        }))
+        .subscribe({
+          next: (seances) => {
+            this.seances = seances;
+            this.filterSeances(this.currentFilter);
+          },
+          error: (error) => {
+            console.error('Erreur lors du chargement des séances', error);
+            // Fallback aux données mockées en cas d'erreur
+            this.loadMockSeances();
+          }
+        });
+    } else {
+      // Si l'utilisateur n'est pas connecté, charger des données mockées
+      this.loadMockSeances();
+      this.isLoading = false;
+    }
+  }
+  
+  loadMockSeances(): void {
     this.isLoading = true;
     
     // In a real application, you would fetch seances from a service
@@ -201,23 +239,17 @@ export class SportifSeancesComponent implements OnInit {
   
   filterSeances(filter: string): void {
     this.currentFilter = filter;
-    const now = new Date();
     
-    switch (filter) {
-      case 'upcoming':
-        this.filteredSeances = this.seances.filter(seance => 
-          new Date(seance.dateHeure) > now
-        );
-        break;
-      case 'past':
-        this.filteredSeances = this.seances.filter(seance => 
-          new Date(seance.dateHeure) <= now
-        );
-        break;
-      case 'all':
-      default:
-        this.filteredSeances = [...this.seances];
-        break;
+    if (filter === 'all') {
+      this.filteredSeances = [...this.seances];
+    } else if (filter === 'upcoming') {
+      this.filteredSeances = this.seances.filter(seance => 
+        this.isUpcoming(seance.dateHeure)
+      );
+    } else if (filter === 'past') {
+      this.filteredSeances = this.seances.filter(seance => 
+        !this.isUpcoming(seance.dateHeure)
+      );
     }
   }
   

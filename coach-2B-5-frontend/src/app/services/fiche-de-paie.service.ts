@@ -71,4 +71,14 @@ export class FicheDePaieService {
   getFichesDePaieByPeriode(periode: string): Observable<FicheDePaie[]> {
     return this.apiService.get<FicheDePaie[]>('fiches-de-paie', { periode });
   }
+
+  /**
+   * Génère les fiches de paie pour tous les coachs pour une période donnée
+   * @param month Mois (format: 'MM')
+   * @param year Année (format: 'YYYY')
+   * @returns Observable avec la liste des fiches de paie générées
+   */
+  generateFichesDePaie(month: string, year: string): Observable<FicheDePaie[]> {
+    return this.apiService.post<FicheDePaie[]>('fiches-de-paie/generate', { month, year });
+  }
 } 

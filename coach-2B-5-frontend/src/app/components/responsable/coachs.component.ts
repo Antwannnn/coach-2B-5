@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { Coach } from '../../models/coach.model';
 import { UserService } from '../../services/user.service';
 import { finalize } from 'rxjs/operators';
@@ -8,87 +8,14 @@ import { finalize } from 'rxjs/operators';
 @Component({
   selector: 'app-responsable-coachs',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="min-h-screen bg-gray-100">
-      <!-- Navigation -->
-      <nav class="bg-teal-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center justify-between h-16">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <span class="text-white text-xl font-bold">CoachApp</span>
-              </div>
-              <div class="hidden md:block">
-                <div class="ml-10 flex items-baseline space-x-4">
-                  <a
-                    routerLink="/responsable/coachs"
-                    class="bg-teal-800 text-white px-3 py-2 rounded-md text-sm font-medium"
-                    aria-current="page"
-                    >Coachs</a
-                  >
-                  <a
-                    routerLink="/responsable/fiches-de-paie"
-                    class="text-gray-300 hover:bg-teal-600 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                    >Fiches de paie</a
-                  >
-                </div>
-              </div>
-            </div>
-            <div class="hidden md:block">
-              <div class="ml-4 flex items-center md:ml-6">
-                <button
-                  type="button"
-                  class="bg-teal-800 p-1 rounded-full text-gray-200 hover:text-white focus:outline-none"
-                >
-                  <span class="sr-only">Voir les notifications</span>
-                  <svg
-                    class="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    />
-                  </svg>
-                </button>
-
-                <!-- Profile dropdown -->
-                <div class="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      class="max-w-xs bg-teal-800 rounded-full flex items-center text-sm focus:outline-none"
-                      id="user-menu-button"
-                    >
-                      <span class="sr-only">Ouvrir le menu utilisateur</span>
-                      <span
-                        class="h-8 w-8 rounded-full bg-teal-600 flex items-center justify-center text-white font-bold"
-                      >
-                        R
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <header class="bg-white shadow">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 class="text-3xl font-bold text-gray-900">Gestion des Coachs</h1>
-        </div>
-      </header>
-
-      <main>
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Gestion des Coachs</h1>
+        
+        <!-- Contenu principal -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
           <!-- Coach list -->
           <div class="px-4 py-6 sm:px-0">
             <div class="bg-white shadow overflow-hidden sm:rounded-md">
@@ -116,12 +43,14 @@ import { finalize } from 'rxjs/operators';
                         <button
                           type="button"
                           class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-teal-700 bg-teal-100 hover:bg-teal-200 focus:outline-none"
+                          (click)="viewCoach(coach)"
                         >
                           Voir
                         </button>
                         <button
                           type="button"
                           class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none"
+                          (click)="editCoach(coach)"
                         >
                           Éditer
                         </button>
@@ -195,6 +124,7 @@ import { finalize } from 'rxjs/operators';
               <button
                 type="button"
                 class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-600 hover:bg-teal-700 focus:outline-none"
+                (click)="addCoach()"
               >
                 <svg
                   class="-ml-1 mr-2 h-5 w-5"
@@ -214,7 +144,7 @@ import { finalize } from 'rxjs/operators';
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   `,
   styles: [],
@@ -223,7 +153,10 @@ export class ResponsableCoachsComponent implements OnInit {
   coaches: Coach[] = [];
   isLoading = true;
   
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private router: Router
+  ) {}
   
   ngOnInit(): void {
     this.loadCoachs();
@@ -249,7 +182,7 @@ export class ResponsableCoachsComponent implements OnInit {
   }
   
   loadMockCoachs(): void {
-    // Garder les données mockées existantes
+    // Garder les données mockées existantes pour le fallback
     this.coaches = [
       {
         id: '1',
@@ -308,5 +241,17 @@ export class ResponsableCoachsComponent implements OnInit {
       day: 'numeric',
     };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+  }
+  
+  viewCoach(coach: Coach): void {
+    this.router.navigate(['/responsable/coachs', coach.id]);
+  }
+  
+  editCoach(coach: Coach): void {
+    this.router.navigate(['/responsable/coachs', coach.id, 'edit']);
+  }
+  
+  addCoach(): void {
+    this.router.navigate(['/responsable/coachs/new']);
   }
 }
