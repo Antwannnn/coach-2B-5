@@ -1,0 +1,57 @@
+/* Styles spécifiques pour le composant coach-detail */
+.prose {
+  max-width: 65ch;
+  color: rgba(55, 65, 81, 1);
+}
+
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+
+/* Animation de chargement */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Styles pour les boutons */
+button:focus {
+  outline: none;
+}
+
+/* Styles pour les formulaires */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: rgba(79, 70, 229, 1);
+  box-shadow: 0 0 0 1px rgba(79, 70, 229, 0.2);
+}
+
+/* Styles pour les messages d'erreur et de succès */
+.text-red-500 {
+  color: rgba(239, 68, 68, 1);
+}
+
+.text-green-800 {
+  color: rgba(6, 95, 70, 1);
+}
+
+/* Styles pour les badges de spécialités */
+.rounded-full {
+  border-radius: 9999px;
+}
+
+/* Styles responsifs */
+@media (max-width: 640px) {
+  .lg\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .lg\:col-start-2 {
+    grid-column-start: 1;
+  }
+} 

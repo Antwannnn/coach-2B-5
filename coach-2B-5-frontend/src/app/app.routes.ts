@@ -1,10 +1,10 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './components/public/home.component';
-import { CoachListComponent } from './components/public/coach-list.component';
-import { RegisterComponent } from './components/public/register.component';
-import { LoginComponent } from './components/public/login.component';
-import { CoachDashboardComponent } from './components/coach/dashboard.component';
-import { SportifDashboardComponent } from './components/sportif/dashboard.component';
+import { HomeComponent } from './pages/public/home.component';
+import { CoachListComponent } from './pages/public/coach-list.component';
+import { RegisterComponent } from './pages/public/register.component';
+import { LoginComponent } from './pages/public/login.component';
+import { CoachDashboardComponent } from './pages/coach/dashboard.component';
+import { SportifDashboardComponent } from './pages/sportif/dashboard.component';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard, adminGuard, userGuard } from './guards/role.guard';
 
@@ -12,6 +12,7 @@ export const routes: Routes = [
   // Public routes
   { path: '', component: HomeComponent },
   { path: 'coachs', component: CoachListComponent },
+  { path: 'coachs/:id', loadComponent: () => import('./pages/public/coach-detail.component').then(m => m.CoachDetailComponent) },
   { 
     path: 'register', 
     component: RegisterComponent,
@@ -31,14 +32,14 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./components/sportif/profile.component').then(
+          import('./pages/sportif/profile.component').then(
             (m) => m.SportifProfileComponent
           ),
       },
       {
         path: 'seances',
         loadComponent: () =>
-          import('./components/sportif/seances.component').then(
+          import('./pages/sportif/seances.component').then(
             (m) => m.SportifSeancesComponent
           ),
       },
@@ -56,21 +57,21 @@ export const routes: Routes = [
       {
         path: 'profile',
         loadComponent: () =>
-          import('./components/coach/profile.component').then(
+          import('./pages/coach/profile.component').then(
             (m) => m.CoachProfileComponent
           ),
       },
       {
         path: 'seances',
         loadComponent: () =>
-          import('./components/coach/seances.component').then(
+          import('./pages/coach/seances.component').then(
             (m) => m.CoachSeancesComponent
           ),
       },
       {
         path: 'sportifs',
         loadComponent: () =>
-          import('./components/coach/sportifs.component').then(
+          import('./pages/coach/sportifs.component').then(
             (m) => m.CoachSportifsComponent
           ),
       },
@@ -87,72 +88,47 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./components/responsable/dashboard.component').then(
+          import('./pages/responsable/dashboard.component').then(
             (m) => m.ResponsableDashboardComponent
           ),
       },
       {
         path: 'profile',
         loadComponent: () =>
-          import('./components/responsable/profile.component').then(
+          import('./pages/responsable/profile.component').then(
             (m) => m.ResponsableProfileComponent
           ),
       },
       {
         path: 'coachs',
         loadComponent: () =>
-          import('./components/responsable/coachs.component').then(
+          import('./pages/responsable/coachs.component').then(
             (m) => m.ResponsableCoachsComponent
           ),
       },
       {
         path: 'sportifs',
         loadComponent: () =>
-          import('./components/responsable/sportifs.component').then(
+          import('./pages/responsable/sportifs.component').then(
             (m) => m.ResponsableSportifsComponent
           ),
       },
       {
         path: 'fiches-de-paie',
         loadComponent: () =>
-          import('./components/responsable/fiches-de-paie.component').then(
+          import('./pages/responsable/fiches-de-paie.component').then(
             (m) => m.ResponsableFichesDePaieComponent
           ),
       },
       {
         path: 'statistiques',
         loadComponent: () =>
-          import('./components/responsable/statistiques.component').then(
+          import('./pages/responsable/statistiques.component').then(
             (m) => m.ResponsableStatistiquesComponent
           ),
       },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
-  },
-
-  // Articles routes with authentication
-  {
-    path: 'articles',
-    canActivate: [authGuard, userGuard],
-    loadComponent: () =>
-      import('./components/articles/articles-list.component').then(
-        (m) => m.ArticlesListComponent
-      ),
-  },
-  {
-    path: 'article/add',
-    canActivate: [authGuard, adminGuard],
-    loadComponent: () =>
-      import('./components/articles/add-article.component').then(
-        (m) => m.AddArticleComponent
-      ),
-  },
-  {
-    path: 'categories',
-    loadComponent: () =>
-      import('./components/categories/categories-list.component').then(
-        (m) => m.CategoriesListComponent
-      ),
   },
 
   // Fallback route

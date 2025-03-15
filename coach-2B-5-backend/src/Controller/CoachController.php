@@ -42,11 +42,56 @@ class CoachController extends AbstractController
     }
 
     #[Route('', name: 'api_coachs_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        // Récupérer les paramètres de filtrage
+        $specialites = $request->query->get('specialites');
+        $tarifMin = $request->query->get('tarifMin');
+        $tarifMax = $request->query->get('tarifMax');
+        
+        // Convertir les spécialités en tableau si elles sont fournies
+        if ($specialites && !is_array($specialites)) {
+            $specialites = [$specialites];
+        }
+        
+        // Récupérer tous les coachs
         $coaches = $this->coachRepository->findAll();
         
-        return $this->json($coaches, Response::HTTP_OK, [], ['groups' => 'coach:read']);
+        // Filtrer les coachs selon les critères
+        if ($specialites || $tarifMin !== null || $tarifMax !== null) {
+            $coaches = array_filter($coaches, function($coach) use ($specialites, $tarifMin, $tarifMax) {
+                // Filtrer par spécialités
+                if ($specialites) {
+                    $coachSpecialites = $coach->getSpecialites();
+                    $hasSpecialite = false;
+                    
+                    foreach ($specialites as $specialite) {
+                        if (in_array($specialite, $coachSpecialites)) {
+                            $hasSpecialite = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!$hasSpecialite) {
+                        return false;
+                    }
+                }
+                
+                // Filtrer par tarif minimum
+                if ($tarifMin !== null && $coach->getTarifHoraire() < (float)$tarifMin) {
+                    return false;
+                }
+                
+                // Filtrer par tarif maximum
+                if ($tarifMax !== null && $coach->getTarifHoraire() > (float)$tarifMax) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+        
+        return $this->json(array_values($coaches), Response::HTTP_OK, [], ['groups' => 'coach:read']);
     }
 
     #[Route('/{id}', name: 'api_coachs_show', methods: ['GET'])]

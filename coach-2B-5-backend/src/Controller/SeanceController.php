@@ -85,6 +85,28 @@ class SeanceController extends AbstractController
         return $this->json($seances, Response::HTTP_OK, [], ['groups' => 'seance:read']);
     }
 
+    // Nouvelle route pour la compatibilité avec le frontend
+    #[Route('/api/sportifs/{sportifId}/seances', name: 'api_sportifs_seances', methods: ['GET'])]
+    public function getSportifSeances(string $sportifId): JsonResponse
+    {
+        // Convertir l'UUID en entier si nécessaire
+        try {
+            // Essayer de trouver le sportif par son ID (UUID ou entier)
+            $sportif = $this->sportifRepository->find($sportifId);
+            
+            if (!$sportif) {
+                return $this->json(['message' => 'Sportif not found'], Response::HTTP_NOT_FOUND);
+            }
+            
+            // Récupérer les séances du sportif
+            $seances = $this->seanceRepository->findBy(['sportifs' => $sportif]);
+            
+            return $this->json($seances, Response::HTTP_OK, [], ['groups' => 'seance:read']);
+        } catch (\Exception $e) {
+            return $this->json(['message' => 'Error: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('', name: 'api_seances_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
@@ -96,25 +118,56 @@ class SeanceController extends AbstractController
         
         $seance = new Seance();
         
-        if (isset($data['coach_id'])) {
-            $coach = $this->coachRepository->find($data['coach_id']);
+        // Récupérer le coach
+        $coachId = $data['coachId'] ?? $data['coach_id'] ?? null;
+        if ($coachId) {
+            $coach = $this->coachRepository->find($coachId);
             if (!$coach) {
                 return $this->json(['message' => 'Coach not found'], Response::HTTP_BAD_REQUEST);
             }
             $seance->setCoach($coach);
+        } else {
+            return $this->json(['message' => 'Coach ID is required'], Response::HTTP_BAD_REQUEST);
         }
         
-        if (isset($data['sportif_id'])) {
-            $sportif = $this->sportifRepository->find($data['sportif_id']);
-            if (!$sportif) {
-                return $this->json(['message' => 'Sportif not found'], Response::HTTP_BAD_REQUEST);
-            }
-            $seance->addSportif($sportif);
+        // Récupérer le sportif (utilisateur connecté)
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'You must be logged in to book a session'], Response::HTTP_UNAUTHORIZED);
         }
         
-        $seance->setDateHeure(new \DateTime($data['dateHeure'] ?? 'now'));
+        $sportifId = $data['sportifId'] ?? $data['sportif_id'] ?? null;
+        if ($sportifId) {
+            $sportif = $this->sportifRepository->find($sportifId);
+        } else {
+            // Si l'ID du sportif n'est pas fourni, essayer de récupérer le sportif à partir de l'utilisateur connecté
+            $sportif = $this->sportifRepository->findOneBy(['email' => $user->getUserIdentifier()]);
+        }
+        
+        if (!$sportif) {
+            return $this->json(['message' => 'Sportif not found'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        $seance->addSportif($sportif);
+        
+        // Construire la date et l'heure
+        if (isset($data['date']) && isset($data['heure'])) {
+            $dateTimeString = $data['date'] . ' ' . $data['heure'];
+            $seance->setDateHeure(new \DateTime($dateTimeString));
+        } elseif (isset($data['dateHeure'])) {
+            $seance->setDateHeure(new \DateTime($data['dateHeure']));
+        } else {
+            return $this->json(['message' => 'Date and time are required'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Définir la durée
+        if (isset($data['duree'])) {
+            $seance->setDuree((int)$data['duree']);
+        }
+        
+        // Autres champs
         $seance->setTypeSeance($data['typeSeance'] ?? 'standard');
-        $seance->setThemeSeance($data['themeSeance'] ?? '');
+        $seance->setThemeSeance($data['themeSeance'] ?? $data['notes'] ?? '');
         $seance->setStatut($data['statut'] ?? 'planifiée');
         $seance->setNiveauSeance($data['niveauSeance'] ?? 'débutant');
         

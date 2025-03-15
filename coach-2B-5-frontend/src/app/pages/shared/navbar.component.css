@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .items-center {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}

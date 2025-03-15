@@ -53,6 +53,10 @@ class Seance
     #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
     private ?string $niveauSeance = null;
 
+    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    #[Groups(['seance:read', 'coach:read', 'sportif:read'])]
+    private ?int $duree = 60;
+
     public function __construct()
     {
         $this->sportifs = new ArrayCollection();
@@ -186,6 +190,18 @@ class Seance
     public function setNiveauSeance(string $niveauSeance): static
     {
         $this->niveauSeance = $niveauSeance;
+
+        return $this;
+    }
+
+    public function getDuree(): ?int
+    {
+        return $this->duree;
+    }
+
+    public function setDuree(?int $duree): static
+    {
+        $this->duree = $duree;
 
         return $this;
     }

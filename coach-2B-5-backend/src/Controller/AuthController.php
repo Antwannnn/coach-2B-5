@@ -48,7 +48,9 @@ class AuthController extends AbstractController
         }
         
         // Générer un token simple pour le développement
-        $token = bin2hex(random_bytes(32));
+        // Inclure le rôle de l'utilisateur dans le token pour pouvoir le récupérer plus tard
+        $userRole = strtolower(str_replace('ROLE_', '', $user->getRole()));
+        $token = bin2hex(random_bytes(16)) . '_' . $userRole . '_' . bin2hex(random_bytes(16));
         
         return $this->json([
             'user' => $user,
@@ -113,7 +115,7 @@ class AuthController extends AbstractController
         $coach->setNom($data['nom'] ?? null);
         $coach->setPrenom($data['prenom'] ?? null);
         $coach->setSpecialites($data['specialites'] ?? []);
-        $coach->setTarifHoraire($data['tarif_horaire'] ?? 0.0);
+        $coach->setTarifHoraire($data['tarifHoraire'] ?? $data['tarif_horaire'] ?? 0.0);
         
         $this->entityManager->persist($coach);
         $this->entityManager->flush();
@@ -229,5 +231,66 @@ class AuthController extends AbstractController
         }
         
         return $this->json($user, Response::HTTP_OK, [], ['groups' => 'user:read']);
+    }
+
+    #[Route('/user/me', name: 'api_user_me', methods: ['GET'])]
+    public function getCurrentUser(Request $request): JsonResponse
+    {
+        // Récupérer le token depuis l'en-tête Authorization
+        $authHeader = $request->headers->get('Authorization');
+        
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return $this->json(['message' => 'Token required'], Response::HTTP_UNAUTHORIZED);
+        }
+        
+        $token = substr($authHeader, 7); // Enlever 'Bearer ' du début
+        
+        // Dans un vrai système avec JWT, on décoderait le token pour obtenir l'ID utilisateur
+        // Pour le développement, on va essayer de récupérer l'utilisateur à partir du token stocké
+        
+        // Essayer de trouver l'utilisateur associé au token dans la base de données
+        // Comme nous n'avons pas de table de tokens, nous allons simuler différents types d'utilisateurs
+        
+        // Vérifier si le token contient des indices sur le type d'utilisateur (pour le développement)
+        $userRole = 'ROLE_USER';
+        
+        // Récupérer l'email de l'utilisateur depuis les headers (pour le développement)
+        $userEmail = $request->headers->get('X-User-Email');
+        
+        if ($userEmail) {
+            // Essayer de trouver l'utilisateur par email
+            $user = $this->userRepository->findOneBy(['email' => $userEmail]);
+            
+            if ($user) {
+                // Retourner les informations réelles de l'utilisateur
+                return $this->json([
+                    'id' => $user->getId(),
+                    'email' => $user->getEmail(),
+                    'roles' => [$user->getRole()], // Convertir en tableau car le frontend attend un tableau
+                    'nom' => $user->getNom(),
+                    'prenom' => $user->getPrenom(),
+                    'role' => $user->getRole() // Ajouter le champ 'role' au singulier pour le frontend
+                ], Response::HTTP_OK);
+            }
+        }
+        
+        // Si nous n'avons pas pu trouver l'utilisateur, simuler un utilisateur en fonction du token
+        if (strpos($token, 'coach') !== false) {
+            $userRole = 'ROLE_COACH';
+        } elseif (strpos($token, 'sportif') !== false) {
+            $userRole = 'ROLE_SPORTIF';
+        } elseif (strpos($token, 'responsable') !== false) {
+            $userRole = 'ROLE_RESPONSABLE';
+        }
+        
+        // Pour le développement, retourner un utilisateur fictif avec le rôle approprié
+        return $this->json([
+            'id' => 1,
+            'email' => 'user@example.com',
+            'roles' => ['ROLE_USER', $userRole],
+            'nom' => 'Dupont',
+            'prenom' => 'Jean',
+            'role' => $userRole // Ajouter le champ 'role' au singulier pour le frontend
+        ], Response::HTTP_OK);
     }
 } 

@@ -64,13 +64,32 @@ export class AuthService {
     this.http.get<any>(this.apiUrlUserInfo, { headers }).subscribe({
       next: (data) => {
         if (data && data.email) {
-          this.currentAuthUserSubject.set(new AuthUser(data.email, data.roles));
-          this.isLoggedIn.set(true);
+          try {
+            // Mettre à jour l'utilisateur courant avec les données reçues
+            const user: User = {
+              id: data.id,
+              email: data.email,
+              nom: data.nom,
+              prenom: data.prenom,
+              role: data.role || (data.roles && data.roles.length > 0 ? data.roles[data.roles.length - 1] : 'ROLE_USER')
+            };
+            
+            this.currentUser.set(user);
+            this.currentAuthUserSubject.set(new AuthUser(data.email, data.roles || [data.role]));
+            this.isLoggedIn.set(true);
+            
+            // Mettre à jour le stockage local
+            localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+          } catch (error) {
+            console.error('Erreur lors du traitement des données utilisateur:', error);
+          }
         }
       },
       error: (error) => {
         console.error('Erreur lors de la récupération des informations utilisateur:', error);
-        if (error.status === 401) {
+        // Ne pas se déconnecter automatiquement en cas d'erreur 401
+        // Cela permet d'utiliser les données utilisateur stockées localement
+        if (error.status === 401 && !localStorage.getItem(this.USER_KEY)) {
           this.logout();
         }
       }
